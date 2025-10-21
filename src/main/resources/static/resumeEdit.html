@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Edit Resume</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+      margin: 40px;
+    }
+
+    h2 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 30px;
+    }
+
+    form {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    h3 {
+      margin-top: 20px;
+      color: #555;
+    }
+
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+      font-size: 14px;
+    }
+
+    button {
+      background-color: #4CAF50;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    @media (max-width: 480px) {
+      form {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h2>Edit Your Resume</h2>
+
+  <form id="resumeForm">
+    <h3>Basic Info</h3>
+    <input type="text" id="name" placeholder="Name" required>
+    <input type="email" id="email" placeholder="Email" required>
+
+    <h3>Project</h3>
+    <input type="text" id="projectTitle" placeholder="Title">
+    <input type="text" id="projectDescription" placeholder="Description">
+    <input type="text" id="projectLink" placeholder="Link">
+    <input type="text" id="projectTechStack" placeholder="Tech Stack">
+
+    <h3>Skill</h3>
+    <input type="text" id="skillName" placeholder="Skill Name">
+    <input type="text" id="proficiencyLevel" placeholder="Proficiency Level">
+
+    <h3>Internship</h3>
+    <input type="text" id="internshipRole" placeholder="Role">
+    <input type="text" id="internshipCompany" placeholder="Company">
+    <input type="date" id="internshipStartDate">
+    <input type="date" id="internshipEndDate">
+    <input type="text" id="internshipContribution" placeholder="Contribution">
+
+    <h3>Certificate</h3>
+    <input type="text" id="certificateCourse" placeholder="Course Name">
+    <input type="text" id="certificatePlatform" placeholder="Platform">
+    <input type="date" id="certificateDate">
+    <input type="text" id="certificateLink" placeholder="Certificate Link">
+
+    <button type="submit">Save Resume</button>
+  </form>
+
+  <script>
+    const token = localStorage.getItem("jwtToken");
+    if (!token) {
+      alert("Session expired. Please log in again.");
+      window.location.href = "login.html";
+    }
+
+    document.getElementById("resumeForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      const resumeData = {
+        name: document.getElementById("name").value,
+        email: document.getElementById("email").value,
+        projects: [{
+          title: document.getElementById("projectTitle").value,
+          description: document.getElementById("projectDescription").value,
+          link: document.getElementById("projectLink").value,
+          techStack: document.getElementById("projectTechStack").value
+        }],
+        skills: [{
+          skillName: document.getElementById("skillName").value,
+          proficiencyLevel: document.getElementById("proficiencyLevel").value
+        }],
+        internships: [{
+          role: document.getElementById("internshipRole").value,
+          company: document.getElementById("internshipCompany").value,
+          startDate: document.getElementById("internshipStartDate").value,
+          endDate: document.getElementById("internshipEndDate").value,
+          contribution: document.getElementById("internshipContribution").value
+        }],
+        certificates: [{
+          courseName: document.getElementById("certificateCourse").value,
+          platform: document.getElementById("certificatePlatform").value,
+          completionDate: document.getElementById("certificateDate").value,
+          certificateLink: document.getElementById("certificateLink").value
+        }]
+      };
+
+      fetch("/api/resume/save", {
+        method: "POST",
+        headers: {
+          "Authorization": "Bearer " + token,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(resumeData)
+      })
+      .then(res => {
+        if (!res.ok) throw new Error("Failed to save resume");
+        return res.json();
+      })
+      .then(() => {
+        alert("✅ Resume saved successfully!");
+        window.location.href = "dashboard.html";
+      })
+      .catch(err => alert(err.message));
+    });
+  </script>
+</body>
+</html>

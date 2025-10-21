@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Register</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      margin: 40px;
+    }
+
+    h2 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 30px;
+    }
+
+    form {
+      max-width: 400px;
+      margin: 0 auto;
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+      font-size: 14px;
+    }
+
+    select {
+      background-color: #fff;
+    }
+
+    button {
+      background-color: #4CAF50;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    label {
+      font-weight: bold;
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    @media (max-width: 480px) {
+      form {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h2>Register</h2>
+
+  <form id="registerForm">
+    <input type="text" id="name" placeholder="Full Name" required>
+    <input type="email" id="email" placeholder="Email" required>
+    <input type="password" id="password" placeholder="Password" required>
+
+    <label for="role">Select Role:</label>
+    <select id="role" required>
+      <option value="SOFTWARE_DEVELOPER">Software Developer</option>
+      <option value="FRONTEND_DEVELOPER">Frontend Developer</option>
+      <option value="BACKEND_DEVELOPER">Backend Developer</option>
+      <option value="FULL_STACK_DEVELOPER">Full Stack Developer</option>
+      <option value="DEVOPS_ENGINEER">DevOps Engineer</option>
+    </select>
+
+    <button type="submit">Register</button>
+  </form>
+
+  <script>
+    document.getElementById("registerForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+
+      const data = {
+        name: document.getElementById("name").value,
+        email: document.getElementById("email").value,
+        password: document.getElementById("password").value,
+        role: document.getElementById("role").value
+      };
+
+      try {
+        const response = await fetch("/api/auth/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+
+        if (!response.ok) {
+          const msg = await response.text();
+          throw new Error(msg || "Registration failed");
+        }
+
+        alert("✅ Registration successful! You will now be logged in.");
+
+        // Auto-login
+        const loginResponse = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: data.email, password: data.password })
+        });
+
+        if (!loginResponse.ok) {
+          throw new Error("Auto-login failed. Please login manually.");
+        }
+
+        const loginData = await loginResponse.json();
+        localStorage.setItem("jwtToken", loginData.token);
+
+        window.location.href = "upload.html";
+
+      } catch (err) {
+        console.error(err);
+        alert("❌ " + err.message);
+      }
+    });
+  </script>
+</body>
+</html>

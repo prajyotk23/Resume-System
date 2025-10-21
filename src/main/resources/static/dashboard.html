@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f7fa;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      max-width: 800px;
+      margin: 40px auto;
+    }
+
+    h2 {
+      color: #333;
+      text-align: center;
+    }
+
+    h3 {
+      margin-top: 25px;
+      color: #444;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 5px;
+    }
+
+    ul {
+      line-height: 1.8;
+      padding-left: 20px;
+    }
+
+    button {
+      margin: 10px 5px 20px 0;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    a {
+      color: #007bff;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 20px;
+      }
+
+      button {
+        width: 100%;
+        margin-bottom: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2 id="welcome">Loading...</h2>
+
+    <div style="text-align:center;">
+      <button id="downloadPdfBtn">Download Resume PDF</button>
+      <button onclick="logout()">Logout</button>
+    </div>
+
+    <h3>Projects</h3>
+    <ul id="projects"></ul>
+
+    <h3>Skills</h3>
+    <ul id="skills"></ul>
+
+    <h3>Internships</h3>
+    <ul id="internships"></ul>
+
+    <h3>Certificates</h3>
+    <ul id="certificates"></ul>
+  </div>
+
+  <script>
+    const token = localStorage.getItem("jwtToken");
+
+    if (!token) {
+      alert("Session expired. Please log in again.");
+      window.location.href = "login.html";
+    }
+
+    fetch("http://localhost:8080/api/resume", {
+      method: "GET",
+      headers: { "Authorization": "Bearer " + token }
+    })
+    .then(res => {
+      if (!res.ok) throw new Error("Session expired");
+      return res.json();
+    })
+    .then(data => {
+      document.getElementById("welcome").innerText = `Welcome, ${data.name}`;
+
+      const projList = document.getElementById("projects");
+      data.projects.forEach(p => {
+        projList.innerHTML += `<li><b>${p.title}</b> — ${p.description} (${p.techStack})</li>`;
+      });
+
+      const skillList = document.getElementById("skills");
+      data.skills.forEach(s => {
+        skillList.innerHTML += `<li>${s.skillName} (${s.proficiencyLevel})</li>`;
+      });
+
+      const internList = document.getElementById("internships");
+      data.internships.forEach(i => {
+        internList.innerHTML += `<li>${i.role} at ${i.company} (${i.startDate} → ${i.endDate})</li>`;
+      });
+
+      const certList = document.getElementById("certificates");
+      data.certificates.forEach(c => {
+        certList.innerHTML += `<li>${c.courseName} — ${c.platform} (<a href="${c.certificateLink}" target="_blank">View</a>)</li>`;
+      });
+    })
+    .catch(err => {
+      console.error("Fetch error:", err);
+      alert("Session expired or unauthorized. Please log in again.");
+      localStorage.removeItem("jwtToken");
+      window.location.href = "login.html";
+    });
+
+    document.getElementById("downloadPdfBtn").addEventListener("click", () => {
+      fetch("http://localhost:8080/api/pdf/resume", {
+        method: "GET",
+        headers: { "Authorization": "Bearer " + token }
+      })
+      .then(res => {
+        if (!res.ok) throw new Error("Failed to download PDF");
+        return res.blob();
+      })
+      .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "Resume.pdf";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      })
+      .catch(err => {
+        console.error("PDF download error:", err);
+        alert("Error downloading PDF: " + err.message);
+      });
+    });
+
+    function logout() {
+      localStorage.removeItem("jwtToken");
+      window.location.href = "login.html";
+    }
+  </script>
+</body>
+</html>
